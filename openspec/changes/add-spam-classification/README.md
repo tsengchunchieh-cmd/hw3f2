@@ -21,3 +21,12 @@ Outputs
 Notes
 - Default model is SVM; pass `--model logreg` to train logistic regression instead.
 - The dataset is SMS spam (not email) — it still serves as a text spam classification baseline.
+
+Logistic regression comparison
+--------------------------------
+I ran a logistic regression (LogReg) baseline as an extra check. The training script supports `--model logreg`.
+Run `python scripts/train_baseline.py --data data/sms_spam_no_header.csv --model logreg --out artifacts` to reproduce.
+
+CI
+--
+This change adds a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs unit tests and trains a LogReg baseline on push/PR, then uploads the artifacts.

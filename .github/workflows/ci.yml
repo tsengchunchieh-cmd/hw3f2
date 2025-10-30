@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r openspec/changes/add-spam-classification/requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          pytest -q
+
+      - name: Download dataset
+        run: |
+          python openspec/changes/add-spam-classification/scripts/download_data.py --out openspec/changes/add-spam-classification/data
+
+      - name: Train baseline (logreg) and save artifacts
+        run: |
+          python openspec/changes/add-spam-classification/scripts/train_baseline.py --data openspec/changes/add-spam-classification/data/sms_spam_no_header.csv --model logreg --out openspec/changes/add-spam-classification/artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: spam-artifacts
+          path: openspec/changes/add-spam-classification/artifacts
