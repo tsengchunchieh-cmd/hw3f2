@@ -100,8 +100,8 @@ def train(df: pd.DataFrame, model_type: str = "svm", out_dir: str = "artifacts")
 
     # Save artifacts
     model_path = os.path.join(out_dir, f"model_{model_type}.joblib")
-    vec_path = os.path.join(out_dir, "vectorizer.joblib")
-    metrics_path = os.path.join(out_dir, "metrics.json")
+    vec_path = os.path.join(out_dir, f"vectorizer_{model_type}.joblib")
+    metrics_path = os.path.join(out_dir, f"metrics_{model_type}.json")
 
     joblib.dump(model, model_path)
     joblib.dump(vectorizer, vec_path)
@@ -115,6 +115,51 @@ def train(df: pd.DataFrame, model_type: str = "svm", out_dir: str = "artifacts")
     pprint(metrics)
 
     return model_path, vec_path, metrics_path
+
+
+def compare_models(df: pd.DataFrame, out_dir: str = "artifacts", models=("svm", "logreg")):
+    """Train multiple models (SVM and LogReg), collect their metrics, and write a unified comparison JSON.
+
+    The function calls `train()` for each model which will persist model and vectorizer
+    files into `out_dir`. It then reads the per-model metrics files and writes
+    `comparison.json` under `out_dir` containing both metrics and a simple summary.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    comparison = {"models": {}, "summary": {}}
+
+    for m in models:
+        print(f"Training and evaluating model: {m}")
+        model_path, vec_path, metrics_path = train(df, model_type=m, out_dir=out_dir)
+        # load metrics
+        try:
+            with open(metrics_path, "r", encoding="utf-8") as fh:
+                metrics = json.load(fh)
+        except Exception:
+            metrics = None
+        comparison["models"][m] = {
+            "model_path": model_path,
+            "vectorizer_path": vec_path,
+            "metrics": metrics,
+        }
+
+    # simple comparative summary: accuracy per model
+    summary = {}
+    for m, info in comparison["models"].items():
+        metrics = info.get("metrics") or {}
+        acc = None
+        # classification_report may be nested; try to extract accuracy
+        if isinstance(metrics.get("classification_report"), dict):
+            acc = metrics["classification_report"].get("accuracy")
+        summary[m] = {"accuracy": acc}
+
+    comparison["summary"] = summary
+
+    comp_path = os.path.join(out_dir, "comparison.json")
+    with open(comp_path, "w", encoding="utf-8") as fh:
+        json.dump(comparison, fh, indent=2)
+
+    print(f"Wrote comparison report to: {comp_path}")
+    return comp_path
 
 
 if __name__ == "__main__":
