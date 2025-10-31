@@ -22,6 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r openspec/changes/add-spam-classification/requirements.txt
           pip install pytest
+          pip install streamlit
 
       - name: Run tests
         run: |
@@ -29,11 +30,15 @@ jobs:
 
       - name: Download dataset
         run: |
-          python openspec/changes/add-spam-classification/scripts/download_data.py --out openspec/changes/add-spam-classification/data
+          python app1.py download --out openspec/changes/add-spam-classification/data
 
       - name: Train baseline (logreg) and save artifacts
         run: |
-          python openspec/changes/add-spam-classification/scripts/train_baseline.py --data openspec/changes/add-spam-classification/data/sms_spam_no_header.csv --model logreg --out openspec/changes/add-spam-classification/artifacts
+          python app1.py train --data openspec/changes/add-spam-classification/data/sms_spam_no_header.csv --out openspec/changes/add-spam-classification/artifacts
+
+      - name: Run Streamlit app
+        run: |
+          streamlit run app1.py streamlit
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

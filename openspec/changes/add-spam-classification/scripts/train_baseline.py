@@ -165,8 +165,7 @@ def compare_models(df: pd.DataFrame, out_dir: str = "artifacts", models=("svm", 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default=DEFAULT_URL, help="Path or URL to dataset CSV (no header, label,message)")
-    parser.add_argument("--model", choices=("svm", "logreg"), default="svm", help="Model type: svm (default) or logreg")
     parser.add_argument("--out", default="artifacts", help="Output directory for artifacts")
     args = parser.parse_args()
     df = load_data(args.data)
-    train(df, model_type=args.model, out_dir=args.out)
+    compare_models(df, out_dir=args.out)
