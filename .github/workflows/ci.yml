@@ -1,4 +1,4 @@
-name: CI
+name: Python CI
 
 on:
   push:
@@ -7,41 +7,26 @@ on:
     branches: [ main ]
 
 jobs:
-  test-and-train:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r openspec/changes/add-spam-classification/requirements.txt
-          pip install pytest
-          pip install streamlit
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest
 
-      - name: Run tests
-        run: |
-          pytest -q
+    - name: Set PYTHONPATH for tests
+      run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-      - name: Download dataset
-        run: |
-          python app1.py download --out openspec/changes/add-spam-classification/data
-
-      - name: Train baseline (logreg) and save artifacts
-        run: |
-          python app1.py train --data openspec/changes/add-spam-classification/data/sms_spam_no_header.csv --out openspec/changes/add-spam-classification/artifacts
-
-      - name: Run Streamlit app
-        run: |
-          streamlit run app1.py streamlit
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: spam-artifacts
-          path: openspec/changes/add-spam-classification/artifacts
+    - name: Run tests
+      run: pytest -v
